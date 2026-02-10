@@ -1,8 +1,8 @@
-﻿-- FlottaKeelo - MySQL schema (core tables)
--- Recommended engine/charset for modern MySQL:
-SET NAMES utf8mb4;
-SET time_zone = '+00:00';
+CREATE DATABASE flottakezelo_db
+	CHARACTER SET utf8mb4
+	COLLATE utf8mb4_general_ci;
 
+USE flottakezelo_db
 -- -------------------------
 -- 1) USERS
 -- -------------------------
@@ -301,3 +301,4 @@ CREATE TABLE IF NOT EXISTS notifications (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
