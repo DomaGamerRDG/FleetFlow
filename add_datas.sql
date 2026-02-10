@@ -1,6 +1,4 @@
-CREATE DATABASE flottakezelo_db
-	CHARACTER SET utf8mb4
-	COLLATE utf8mb4_general_ci;
+USE flottakezelo_db
 
 INSERT INTO users (id, email, password_hash, role, full_name, phone)
 VALUES
@@ -75,4 +73,5 @@ INSERT INTO notifications
 VALUES
 (2, 'SERVICE_APPROVED', 'Szerviz jóváhagyva', 'A szerviz időpontja rögzítve lett.', 1),
 (1, 'SERVICE_CREATED', 'Új szerviz igény', 'Új szerviz igény érkezett egy járműhöz.', 1);
+
 
