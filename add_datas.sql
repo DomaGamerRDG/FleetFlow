@@ -1,4 +1,8 @@
-﻿INSERT INTO users (id, email, password_hash, role, full_name, phone)
+CREATE DATABASE flottakezelo_db
+	CHARACTER SET utf8mb4
+	COLLATE utf8mb4_general_ci;
+
+INSERT INTO users (id, email, password_hash, role, full_name, phone)
 VALUES
 (1, 'admin@flotta.hu', 'hashed_admin_pw', 'ADMIN', 'Kovács Admin', '0612345678'),
 (2, 'sofor1@flotta.hu', 'hashed_driver_pw', 'DRIVER', 'Nagy Péter', '0620123456'),
@@ -71,3 +75,4 @@ INSERT INTO notifications
 VALUES
 (2, 'SERVICE_APPROVED', 'Szerviz jóváhagyva', 'A szerviz időpontja rögzítve lett.', 1),
 (1, 'SERVICE_CREATED', 'Új szerviz igény', 'Új szerviz igény érkezett egy járműhöz.', 1);
+
