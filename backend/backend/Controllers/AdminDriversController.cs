@@ -12,7 +12,7 @@ namespace backend.Controllers
 {
     [Route("api/admin/drivers")]
     [ApiController]
-    //[Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN")]
     public class AdminDriversController : ControllerBase
     {
         private readonly FlottakezeloDbContext _context;
