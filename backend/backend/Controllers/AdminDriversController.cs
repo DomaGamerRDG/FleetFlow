@@ -122,7 +122,7 @@ namespace backend.Controllers
         {
             return await this.Run(async () =>
             {
-                if (string.IsNullOrWhiteSpace(createDriverDto.FullName) || string.IsNullOrWhiteSpace(createDriverDto.Email) || string.IsNullOrWhiteSpace(createDriverDto.Password) || string.IsNullOrWhiteSpace(createDriverDto.LicenseNumber) || !createDriverDto.LicenseExpiryDate.HasValue || string.IsNullOrWhiteSpace(createDriverDto.Phone))
+                if (string.IsNullOrWhiteSpace(createDriverDto.FullName) || string.IsNullOrWhiteSpace(createDriverDto.Email)|| string.IsNullOrWhiteSpace(createDriverDto.LicenseNumber) || !createDriverDto.LicenseExpiryDate.HasValue || string.IsNullOrWhiteSpace(createDriverDto.Phone))
                     return BadRequest("FullName, Email, Password, LicenseNumber, LicenseExpiryDate and Phone are required.");
                 if (await _context.Users.AnyAsync(x => x.Email == createDriverDto.Email))
                     return BadRequest("Email already exists.");
@@ -132,7 +132,7 @@ namespace backend.Controllers
                     FullName = createDriverDto.FullName,
                     Email = createDriverDto.Email,
                     Phone = createDriverDto.Phone,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(createDriverDto.Password),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("fleetflowuser"),
                     IsActive = true,
                     Role = "DRIVER"
                 };
@@ -182,32 +182,6 @@ namespace backend.Controllers
                 if (updatedRows == 0)
                     return StatusCode(500, "Failed to update driver.");
                 return Ok($"Driver with ID {id} updated successfully.");
-            });
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetDriverById(ulong id)
-        {
-            return await this.Run(async () =>
-            {
-                var driver = await _context.Users.AsNoTracking().Where(x => x.Id == id && x.Role == "DRIVER")
-                    .Join(
-                        _context.Drivers,
-                        user => user.Id,
-                        driver => driver.UserId,
-                        (user, driver) => new UserDto
-                        {
-                            FullName = user.FullName,
-                            Email = user.Email,
-                            Phone = user.Phone,
-                            LicenseNumber = driver.LicenseNumber,
-                            LicenseExpiryDate = driver.LicenseExpiryDate,
-                            IsActive = user.IsActive
-                        }
-                    ).FirstOrDefaultAsync();
-                if (driver == null)
-                    return NotFound("Driver not found.");
-                return Ok(driver);
             });
         }
     }
