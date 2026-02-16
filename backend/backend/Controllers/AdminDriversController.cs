@@ -39,10 +39,10 @@ namespace backend.Controllers
                         LicenseNumber = driver.LicenseNumber,
                         LicenseExpiryDate = driver.LicenseExpiryDate,
                         IsActive = user.IsActive,
-                        Notes = driver.Notes
+                        Notes = driver.Notes,
+                        Id = user.Id
                     }
                 );
-
                 var q = query.StringQ?.Trim();
                 if (!string.IsNullOrWhiteSpace(q))
                 {
@@ -53,14 +53,11 @@ namespace backend.Controllers
                         (x.Phone != null && x.Phone.Contains(q))
                     );
                 }
-
                 if (query.IsActiveQ == false)
                     usersQuery = usersQuery.Where(x => x.IsActive == false);
                 else
                     usersQuery = usersQuery.Where(x => x.IsActive == true);
-
                 var totalCount = await usersQuery.CountAsync();
-
                 usersQuery = (query.Ordering?.ToLower()) switch
                 {
                     "fullname" => usersQuery.OrderBy(x => x.FullName),
@@ -69,11 +66,9 @@ namespace backend.Controllers
                     "licenseexpirydate_desc" => usersQuery.OrderByDescending(x => x.LicenseExpiryDate),
                     _ => usersQuery.OrderBy(x => x.FullName)
                 };
-
                 var page = query.Page < 1 ? 1 : query.Page;
                 var pageSize = query.PageSize is < 1 ? 25 : Math.Min(query.PageSize, 200);
                 var drivers = await usersQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
                 return Ok(new
                 {
                     totalCount,
@@ -143,7 +138,6 @@ namespace backend.Controllers
                     return BadRequest("FullName, Email, Password, LicenseNumber, LicenseExpiryDate and Phone are required.");
                 if (await _context.Users.AnyAsync(x => x.Email == createDriverDto.Email))
                     return BadRequest("Email already exists.");
-
                 User newUser = new User
                 {
                     FullName = createDriverDto.FullName,

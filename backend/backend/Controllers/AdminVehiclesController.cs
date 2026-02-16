@@ -24,71 +24,49 @@ namespace backend.Controllers
         {
             return await this.Run(async () =>
             {
-                var vehiclesQuery = _context.Vehicles.AsNoTracking()
-               .Join(
-                   _context.VehicleAssignments,
-                   vehicle => vehicle.Id,
-                   assignment => assignment.VehicleId,
-                   (vehicle, assignment) => new { vehicle, assignment }
-               )
-               .Join(
-                   _context.Drivers,
-                   va => va.assignment.DriverId,
-                   driver => driver.Id,
-                   (va, driver) => new { va.vehicle, va.assignment, driver }
-               )
-               .Join(
-                   _context.Users,
-                   vad => vad.driver.UserId,
-                   user => user.Id,
-                   (vad, user) => new VehiclesDto
-                   {
-                       LicensePlate = vad.vehicle.LicensePlate,
-                       BrandModel = $"{vad.vehicle.Brand} {vad.vehicle.Model}",
-                       Year = vad.vehicle.Year ?? 0,
-                       CurrentMileageKm = vad.vehicle.CurrentMileageKm,
-                       Vin = vad.vehicle.Vin,
-                       UserEmail = user.Email,
-                       Status = vad.vehicle.Status
-                   }
-               );
-
+                var vehiclesQuery = _context.Vehicles.AsNoTracking().Select(v => new VehiclesDto
+                    {
+                        Id = v.Id,
+                        LicensePlate = v.LicensePlate,
+                        BrandModel = v.Brand + " " + v.Model,
+                        Year = v.Year ?? 0,
+                        CurrentMileageKm = v.CurrentMileageKm,
+                        Vin = v.Vin,
+                        Status = v.Status,
+                        UserEmail = v.VehicleAssignments.Where(a => a.AssignedTo == null).Select(a => a.Driver.User.Email).FirstOrDefault()!
+                    });
                 var q = query.StringQ?.Trim();
                 if (!string.IsNullOrWhiteSpace(q))
                 {
                     vehiclesQuery = vehiclesQuery.Where(x =>
                         x.LicensePlate.Contains(q) ||
-                        x.UserEmail.Contains(q) ||
                         x.BrandModel.Contains(q) ||
+                        (x.UserEmail != null && x.UserEmail.Contains(q)) ||
                         (x.Vin != null && x.Vin.Contains(q)) ||
                         x.Year.ToString().Contains(q) ||
                         x.CurrentMileageKm.ToString().Contains(q)
                     );
                 }
-
-                if (query.Status == "RETIRED")
-                    vehiclesQuery = vehiclesQuery.Where(x => x.Status == "RETIRED");
-                else if (query.Status == "ACTIVE")
-                    vehiclesQuery = vehiclesQuery.Where(x => x.Status == "ACTIVE");
-                else
-                    vehiclesQuery = vehiclesQuery.Where(x => x.Status == "ACTIVE" && x.Status == "MAINTENANCE");
-
+                if (string.IsNullOrWhiteSpace(query.Status))
+                    vehiclesQuery = vehiclesQuery.Where(x => x.Status == "ACTIVE" || x.Status == "MAINTENANCE");
+                if (!string.IsNullOrWhiteSpace(query.Status))
+                    vehiclesQuery = vehiclesQuery.Where(x => x.Status == query.Status);
                 var totalCount = await vehiclesQuery.CountAsync();
                 vehiclesQuery = (query.Ordering?.ToLower()) switch
                 {
                     "year" => vehiclesQuery.OrderBy(x => x.Year),
                     "year_desc" => vehiclesQuery.OrderByDescending(x => x.Year),
-                    "currentmileagkm" => vehiclesQuery.OrderBy(x => x.CurrentMileageKm),
-                    "currentmileagkm_desc" => vehiclesQuery.OrderByDescending(x => x.CurrentMileageKm),
+                    "currentmileagekm" => vehiclesQuery.OrderBy(x => x.CurrentMileageKm),
+                    "currentmileagekm_desc" => vehiclesQuery.OrderByDescending(x => x.CurrentMileageKm),
                     "brandmodel" => vehiclesQuery.OrderBy(x => x.BrandModel),
                     "brandmodel_desc" => vehiclesQuery.OrderByDescending(x => x.BrandModel),
-                    _ => vehiclesQuery.OrderBy(x => x.Year)
+                    "licenseplate" => vehiclesQuery.OrderBy(x => x.LicensePlate),
+                    "licenseplate_desc" => vehiclesQuery.OrderByDescending(x => x.LicensePlate),
+                    _ => vehiclesQuery.OrderByDescending(x => x.Id)
                 };
-
                 var page = query.Page < 1 ? 1 : query.Page;
-                var pageSize = query.PageSize is < 1 ? 25 : Math.Min(query.PageSize, 200);
+                var pageSize = query.PageSize < 1 ? 25 : Math.Min(query.PageSize, 200);
                 var vehicles = await vehiclesQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
                 return Ok(new
                 {
                     totalCount,
@@ -100,12 +78,14 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateVehicle([FromBody] Vehicle dto)
+        public async Task<IActionResult> CreateVehicle([FromBody] CreateVehiclesDto dto)
         {
             return await this.Run(async () =>
             {
-                if (await _context.Vehicles.AnyAsync(x => x.LicensePlate == dto.LicensePlate))
-                    return BadRequest("Vehicle with the same license plate already exists.");
+                if (string.IsNullOrEmpty(dto.LicensePlate) || string.IsNullOrEmpty(dto.Model) || string.IsNullOrEmpty(dto.Brand) || string.IsNullOrEmpty(dto.Vin) || dto.Year == 0)
+                    return BadRequest("LicensePlate, Model, Brand, Vin and Year are required.");
+                if (await _context.Vehicles.AnyAsync(x => x.LicensePlate == dto.LicensePlate || x.Vin == dto.Vin))
+                    return BadRequest("Vehicle with the same license plate or vin already exists.");
                 var vehicle = new Vehicle
                 {
                     LicensePlate = dto.LicensePlate,
@@ -120,7 +100,7 @@ namespace backend.Controllers
                 int createdRows = await _context.SaveChangesAsync();
                 if (createdRows == 0)
                     return StatusCode(500, "Failed to create vehicle.");
-                return Ok(new { message = "Vehicle created successfully." });
+                return StatusCode(201, "Vehicle created successfully.");
             });
         }
 
@@ -185,21 +165,29 @@ namespace backend.Controllers
         }
 
         [HttpPatch("edit/{id}")]
-        public async Task<IActionResult> EditVehicle(ulong id, [FromBody] Vehicle dto)
+        public async Task<IActionResult> EditVehicle(ulong id, [FromBody] CreateVehiclesDto dto)
         {
             return await this.Run(async () =>
             {
                 Vehicle? vehicle = await _context.Vehicles.FindAsync(id);
                 if (vehicle == null)
                     return NotFound("Vehicle not found.");
-                if (vehicle.LicensePlate != dto.LicensePlate && await _context.Vehicles.AnyAsync(x => x.LicensePlate == dto.LicensePlate))
-                    return BadRequest("Vehicle with the same license plate already exists.");
-                vehicle.LicensePlate = dto.LicensePlate;
-                vehicle.Brand = dto.Brand;
-                vehicle.Model = dto.Model;
-                vehicle.Year = dto.Year;
-                vehicle.Vin = vehicle.Vin;
-                vehicle.CurrentMileageKm = dto.CurrentMileageKm;
+                if (!string.IsNullOrEmpty(dto.LicensePlate) && vehicle.LicensePlate != dto.LicensePlate && await _context.Vehicles.AnyAsync(x => x.LicensePlate == dto.LicensePlate))
+                    return BadRequest("Vehicle with the same license plate or vin already exists.");
+                if (!string.IsNullOrEmpty(dto.Vin))
+                    return BadRequest("Vehicles vin is not editable.");
+                if (dto.CurrentMileageKm != 0 && dto.CurrentMileageKm < vehicle.CurrentMileageKm)
+                    return BadRequest("Current mileage cannot be less than the current mileage.");
+                if (!string.IsNullOrEmpty(dto.LicensePlate))
+                    vehicle.LicensePlate = dto.LicensePlate;
+                if (!string.IsNullOrEmpty(dto.Brand))
+                    vehicle.Brand = dto.Brand;
+                if (!string.IsNullOrEmpty(dto.Model))
+                    vehicle.Model = dto.Model;
+                if (dto.Year != 0)
+                    vehicle.Year = dto.Year;
+                if (dto.CurrentMileageKm != 0)
+                    vehicle.CurrentMileageKm = dto.CurrentMileageKm;
                 vehicle.UpdatedAt = DateTime.UtcNow;
                 _context.Vehicles.Update(vehicle);
                 int modifiedRows = await _context.SaveChangesAsync();
