@@ -24,7 +24,9 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDrivers([FromQuery] UserQuery query)
         {
-            var usersQuery = _context.Users.AsNoTracking().Where(x => x.Role == "DRIVER")
+            return await this.Run(async () =>
+            {
+                var usersQuery = _context.Users.AsNoTracking().Where(x => x.Role == "DRIVER")
                 .Join(
                     _context.Drivers,
                     user => user.Id,
@@ -41,47 +43,44 @@ namespace backend.Controllers
                     }
                 );
 
-            // 🔎 Szűrés
-            var q = query.StringQ?.Trim();
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                usersQuery = usersQuery.Where(x =>
-                    x.FullName.Contains(q) ||
-                    x.Email.Contains(q) ||
-                    x.LicenseNumber.Contains(q) ||
-                    (x.Phone != null && x.Phone.Contains(q))
-                );
-            }
+                var q = query.StringQ?.Trim();
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    usersQuery = usersQuery.Where(x =>
+                        x.FullName.Contains(q) ||
+                        x.Email.Contains(q) ||
+                        x.LicenseNumber.Contains(q) ||
+                        (x.Phone != null && x.Phone.Contains(q))
+                    );
+                }
 
-            if (query.IsActiveQ == false)
-                usersQuery = usersQuery.Where(x => x.IsActive == false);
-            else
-                usersQuery = usersQuery.Where(x => x.IsActive == true);
+                if (query.IsActiveQ == false)
+                    usersQuery = usersQuery.Where(x => x.IsActive == false);
+                else
+                    usersQuery = usersQuery.Where(x => x.IsActive == true);
 
-            // 🔥 Paging előtt megszámoljuk!
-            var totalCount = await usersQuery.CountAsync();
+                var totalCount = await usersQuery.CountAsync();
 
-            // Rendezés
-            usersQuery = (query.Ordering?.ToLower()) switch
-            {
-                "fullname" => usersQuery.OrderBy(x => x.FullName),
-                "fullname_desc" => usersQuery.OrderByDescending(x => x.FullName),
-                "licenseexpirydate" => usersQuery.OrderBy(x => x.LicenseExpiryDate),
-                "licenseexpirydate_desc" => usersQuery.OrderByDescending(x => x.LicenseExpiryDate),
-                _ => usersQuery.OrderBy(x => x.FullName)
-            };
+                usersQuery = (query.Ordering?.ToLower()) switch
+                {
+                    "fullname" => usersQuery.OrderBy(x => x.FullName),
+                    "fullname_desc" => usersQuery.OrderByDescending(x => x.FullName),
+                    "licenseexpirydate" => usersQuery.OrderBy(x => x.LicenseExpiryDate),
+                    "licenseexpirydate_desc" => usersQuery.OrderByDescending(x => x.LicenseExpiryDate),
+                    _ => usersQuery.OrderBy(x => x.FullName)
+                };
 
-            // Paging
-            var page = query.Page < 1 ? 1 : query.Page;
-            var pageSize = query.PageSize is < 1 ? 25 : Math.Min(query.PageSize, 200);
-            var drivers = await usersQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+                var page = query.Page < 1 ? 1 : query.Page;
+                var pageSize = query.PageSize is < 1 ? 25 : Math.Min(query.PageSize, 200);
+                var drivers = await usersQuery.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return Ok(new
-            {
-                totalCount,
-                page,
-                pageSize,
-                data = drivers
+                return Ok(new
+                {
+                    totalCount,
+                    page,
+                    pageSize,
+                    data = drivers
+                });
             });
         }
 
@@ -114,6 +113,24 @@ namespace backend.Controllers
                 if (modifiedRows == 0)
                     return StatusCode(500, "Failed to deactivate driver.");
                 return Ok($"Driver with ID {id} deactivated successfully.");
+            });
+        }
+
+        [HttpPatch("activate/{id}")]
+        public async Task<IActionResult> ActivateDriver(ulong id)
+        {
+            return await this.Run(async () =>
+            {
+                User? driver = await _context.Users.FindAsync(id);
+                if (driver == null || driver.Role != "DRIVER")
+                    return NotFound("Driver not found.");
+                driver.IsActive = true;
+                driver.UpdatedAt = DateTime.UtcNow;
+                _context.Users.Update(driver);
+                int modifiedRows = await _context.SaveChangesAsync();
+                if (modifiedRows == 0)
+                    return StatusCode(500, "Failed to activate driver.");
+                return Ok($"Driver with ID {id} activated successfully.");
             });
         }
 
