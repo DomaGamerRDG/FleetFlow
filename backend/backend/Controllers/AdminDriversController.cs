@@ -39,7 +39,8 @@ namespace backend.Controllers
                         LicenseNumber = driver.LicenseNumber,
                         LicenseExpiryDate = driver.LicenseExpiryDate,
                         IsActive = user.IsActive,
-                        Notes = driver.Notes
+                        Notes = driver.Notes,
+                        Id = user.Id
                     }
                 );
 
@@ -143,7 +144,6 @@ namespace backend.Controllers
                     return BadRequest("FullName, Email, Password, LicenseNumber, LicenseExpiryDate and Phone are required.");
                 if (await _context.Users.AnyAsync(x => x.Email == createDriverDto.Email))
                     return BadRequest("Email already exists.");
-
                 User newUser = new User
                 {
                     FullName = createDriverDto.FullName,

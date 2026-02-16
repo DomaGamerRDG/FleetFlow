@@ -49,7 +49,8 @@ namespace backend.Controllers
                        CurrentMileageKm = vad.vehicle.CurrentMileageKm,
                        Vin = vad.vehicle.Vin,
                        UserEmail = user.Email,
-                       Status = vad.vehicle.Status
+                       Status = vad.vehicle.Status,
+                       Id = vad.vehicle.Id
                    }
                );
 
