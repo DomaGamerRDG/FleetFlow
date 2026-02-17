@@ -2,9 +2,9 @@ USE flottakezelo_db
 
 INSERT INTO users (id, email, password_hash, role, full_name, phone)
 VALUES
-(1, 'admin@flotta.hu', 'hashed_admin_pw', 'ADMIN', 'Kovács Admin', '0612345678'),
-(2, 'sofor1@flotta.hu', 'hashed_driver_pw', 'DRIVER', 'Nagy Péter', '0620123456'),
-(3, 'sofor2@flotta.hu', 'hashed_driver_pw', 'DRIVER', 'Kiss Gábor', '0630123456');
+(1, 'admin@flotta.hu', '$2a$12$ZReM2RxbxU0BuNOvuEBYnuZxNoNoSCFW1Z.b6mvdk4TEaqsR3M1fW', 'ADMIN', 'Kovács Admin', '0612345678'),
+(2, 'sofor1@flotta.hu', '$2a$12$0k.zHoA/VI3MvqKEeV8saOoVv4Yvqdg7gnRxCFbGw625iGCz5i/iG', 'DRIVER', 'Nagy Péter', '0620123456'),
+(3, 'sofor2@flotta.hu', '$2a$12$p9wqqTaN3qxSr8mrDzVe3OzRqba/.JJnC26GDpXkwKQNtfRqEtOVC', 'DRIVER', 'Kiss Gábor', '0630123456');
 
 INSERT INTO drivers (id, user_id, license_number, license_expiry_date)
 VALUES

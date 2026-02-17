@@ -173,7 +173,7 @@ namespace backend.Controllers
                 if (vehicle == null)
                     return NotFound("Vehicle not found.");
                 if (!string.IsNullOrEmpty(dto.LicensePlate) && vehicle.LicensePlate != dto.LicensePlate && await _context.Vehicles.AnyAsync(x => x.LicensePlate == dto.LicensePlate))
-                    return BadRequest("Vehicle with the same license plate or vin already exists.");
+                    return BadRequest("Vehicle with the same license plate already exists.");
                 if (!string.IsNullOrEmpty(dto.Vin))
                     return BadRequest("Vehicles vin is not editable.");
                 if (dto.CurrentMileageKm != 0 && dto.CurrentMileageKm < vehicle.CurrentMileageKm)

@@ -39,11 +39,10 @@ namespace backend.Controllers
             return Ok(new LoginResponseDto
             {
                 Token = token,
-                Email = user.Email,
                 FullName = user.FullName,
                 Role = user.Role,
-                Phone = user.Phone!,
-                //ProfileImgUrl = 
+                Id = user.Id
+                //ProfileImgUrl =
             });
         }
 

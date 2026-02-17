@@ -26,21 +26,16 @@ namespace backend.Controllers
         {
             return await this.Run(async () =>
             {
-                var usersQuery = _context.Users.AsNoTracking().Where(x => x.Role == "DRIVER")
-                .Join(
-                    _context.Drivers,
-                    user => user.Id,
-                    driver => driver.UserId,
-                    (user, driver) => new UserDto
+                var usersQuery = _context.Users.AsNoTracking().Include(x => x.Driver).Where(x => x.Role == "DRIVER").Select(d => new UserDto
                     {
-                        FullName = user.FullName,
-                        Email = user.Email,
-                        Phone = user.Phone,
-                        LicenseNumber = driver.LicenseNumber,
-                        LicenseExpiryDate = driver.LicenseExpiryDate,
-                        IsActive = user.IsActive,
-                        Notes = driver.Notes,
-                        Id = user.Id
+                        FullName = d.FullName,
+                        Email = d.Email,
+                        Phone = d.Phone,
+                        LicenseNumber = d.Driver!.LicenseNumber,
+                        LicenseExpiryDate = d.Driver.LicenseExpiryDate,
+                        IsActive = d.IsActive,
+                        Notes = d.Driver.Notes,
+                        Id = d.Id
                     }
                 );
                 var q = query.StringQ?.Trim();
@@ -135,7 +130,9 @@ namespace backend.Controllers
             return await this.Run(async () =>
             {
                 if (string.IsNullOrWhiteSpace(createDriverDto.FullName) || string.IsNullOrWhiteSpace(createDriverDto.Email)|| string.IsNullOrWhiteSpace(createDriverDto.LicenseNumber) || !createDriverDto.LicenseExpiryDate.HasValue || string.IsNullOrWhiteSpace(createDriverDto.Phone))
-                    return BadRequest("FullName, Email, Password, LicenseNumber, LicenseExpiryDate and Phone are required.");
+                    return BadRequest("FullName, Email, LicenseNumber, LicenseExpiryDate and Phone are required.");
+                if (createDriverDto.LicenseExpiryDate.Value <= DateTime.UtcNow)
+                    return BadRequest("License expiry date must be in the future.");
                 if (await _context.Users.AnyAsync(x => x.Email == createDriverDto.Email))
                     return BadRequest("Email already exists.");
                 User newUser = new User
@@ -173,6 +170,10 @@ namespace backend.Controllers
                 Driver? driver1 = await _context.Drivers.FirstOrDefaultAsync(x => x.UserId == id);
                 if (driver == null || driver.Role != "DRIVER")
                     return NotFound("Driver not found.");
+                if (updateDriverDto.LicenseExpiryDate.HasValue && updateDriverDto.LicenseExpiryDate.Value <= DateTime.UtcNow)
+                    return BadRequest("License expiry date must be in the future.");
+                if (updateDriverDto.Email != null)
+                    return BadRequest("Email cannot be updated.");
                 if (!string.IsNullOrWhiteSpace(updateDriverDto.FullName))
                     driver.FullName = updateDriverDto.FullName;
                 if (!string.IsNullOrWhiteSpace(updateDriverDto.Phone))

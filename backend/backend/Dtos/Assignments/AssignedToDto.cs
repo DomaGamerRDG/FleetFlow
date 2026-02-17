@@ -1,6 +1,6 @@
 ﻿using backend.Models;
 
-namespace backend.Dtos.Vehicles
+namespace backend.Dtos.Assignments
 {
     public class AssignedToDto
     {
