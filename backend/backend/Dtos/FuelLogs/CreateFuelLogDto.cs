@@ -9,5 +9,7 @@
         public string Currency { get; set; } = null!;
         public string? StationName { get; set; }
         public string? LocationText { get; set; }
+        public IFormFile? File { get; set; }
+        public ulong? ReceiptFileId { get; set; }
     }
 }

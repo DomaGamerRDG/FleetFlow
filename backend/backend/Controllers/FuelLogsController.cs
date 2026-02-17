@@ -14,9 +14,11 @@ namespace backend.Controllers
     public class FuelLogsController : ControllerBase
     {
         private readonly FlottakezeloDbContext _context;
-        public FuelLogsController(FlottakezeloDbContext context)
+        private readonly IWebHostEnvironment _env;
+        public FuelLogsController(FlottakezeloDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         [HttpGet("admin/fuellogs")]
@@ -34,7 +36,8 @@ namespace backend.Controllers
                     StationName = v.StationName,
                     ReceiptFileId = v.ReceiptFileId,
                     UserEmail = v.Driver.User.Email,
-                    LicensePlate = v.Vehicle.LicensePlate
+                    LicensePlate = v.Vehicle.LicensePlate,
+                    IsDeleted = v.IsDeleted
                 });
                 var q = query.StringQ?.Trim();
                 if (!string.IsNullOrWhiteSpace(q))
@@ -89,7 +92,8 @@ namespace backend.Controllers
                     StationName = v.StationName,
                     ReceiptFileId = v.ReceiptFileId,
                     UserEmail = v.Driver.User.Email,
-                    LicensePlate = v.Vehicle.LicensePlate
+                    LicensePlate = v.Vehicle.LicensePlate,
+                    IsDeleted = v.IsDeleted
                 });
                 var totalCount = await fuellogsQuery.CountAsync();
                 var page = query.Page < 1 ? 1 : query.Page;
@@ -153,6 +157,8 @@ namespace backend.Controllers
                     return BadRequest("Liters must be greater than 0");
                 if (createFuelLogDto.TotalCost <= 0)
                     return BadRequest("Total cost must be greater than 0");
+                if (createFuelLogDto.Date > DateTime.UtcNow)
+                    return BadRequest("Date cannot be in the future");
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     return NotFound("User not found");
@@ -164,22 +170,51 @@ namespace backend.Controllers
                     return NotFound("Vehicle not found");
                 if (createFuelLogDto.OdometerKm < vehicle.CurrentMileageKm)
                     return BadRequest("OdometerKm must be greater than or equal to the current mileage of the vehicle");
+                if (createFuelLogDto.File != null)
+                {
+                    var folderPath = Path.Combine(_env.ContentRootPath, "Uploads", "Fuellogs");
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+                    var extension = Path.GetExtension(createFuelLogDto.File.FileName);
+                    var uniqueFileName = Guid.NewGuid() + extension;
+                    var filePath = Path.Combine(folderPath, uniqueFileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                        await createFuelLogDto.File.CopyToAsync(stream);
+                    var file = new Models.File()
+                    {
+                        UploadedByUserId = userId,
+                        OriginalName = createFuelLogDto.File.FileName,
+                        StoredName = Path.GetFileName(uniqueFileName),
+                        MimeType = createFuelLogDto.File.ContentType,
+                        SizeBytes = (ulong)createFuelLogDto.File.Length,
+                        StorageProvider = "local",
+                    };
+                    _context.Files.Add(file);
+                    int createdRow = await _context.SaveChangesAsync();
+                    if (createdRow == 0)
+                        return StatusCode(500, "Failed to save receipt file");
+                    createFuelLogDto.ReceiptFileId = file.Id;
+                }
                 var fuellog = new FuelLog
                 {
                     VehicleId = vehicle.Id,
                     DriverId = user.Driver!.Id,
                     Date = createFuelLogDto.Date,
+                    OdometerKm = createFuelLogDto.OdometerKm,
                     TotalCost = createFuelLogDto.TotalCost,
                     Currency = createFuelLogDto.Currency,
                     Liters = createFuelLogDto.Liters,
                     StationName = createFuelLogDto.StationName,
-                    ReceiptFileId = createFuelLogDto.ReceiptFileId
+                    LocationText = createFuelLogDto.LocationText,
+                    ReceiptFileId = createFuelLogDto.ReceiptFileId,
+                    IsDeleted = false
                 };
                 _context.FuelLogs.Add(fuellog);
-                int modifiedRow = await _context.SaveChangesAsync();
-                if (modifiedRow == 0)
+                vehicle.CurrentMileageKm = createFuelLogDto.OdometerKm;
+                int createdRow1 = await _context.SaveChangesAsync();
+                if (createdRow1 == 0)
                     return StatusCode(500, "Failed to create fuellog");
-                return Ok("Fuellog created");
+                return StatusCode(201, "Fuellog created");
             });
         }
     }

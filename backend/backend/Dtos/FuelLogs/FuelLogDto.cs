@@ -10,5 +10,6 @@
         public ulong? ReceiptFileId { get; set; }
         public string UserEmail { get; set; } = "";
         public string LicensePlate { get; set; } = "";
+        public bool IsDeleted { get; set; }
     }
 }
