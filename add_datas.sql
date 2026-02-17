@@ -2,9 +2,9 @@ USE flottakezelo_db
 
 INSERT INTO users (id, email, password_hash, role, full_name, phone)
 VALUES
-(1, 'admin@flotta.hu', 'hashed_admin_pw', 'ADMIN', 'Kovács Admin', '0612345678'),
-(2, 'sofor1@flotta.hu', 'hashed_driver_pw', 'DRIVER', 'Nagy Péter', '0620123456'),
-(3, 'sofor2@flotta.hu', 'hashed_driver_pw', 'DRIVER', 'Kiss Gábor', '0630123456');
+(1, 'admin@flotta.hu', '$2a$12$u2fVJvzVrWmp3Z/mwP/76O1VlXC3y7pMPPtFjzzzwwb3WKXE/cT3K', 'ADMIN', 'Kovács Admin', '0612345678'),
+(2, 'sofor1@flotta.hu', '$2a$12$2xCTUlvihASTB/P98Qg9i.WPxWxiMEfukTU0V.7V7AHVoCxaQZvEe', 'DRIVER', 'Nagy Péter', '0620123456'),
+(3, 'sofor2@flotta.hu', '$2a$12$zfhUsxKfx2V1zt4s59hjcerOhJ6QCseQdSGfX2Iio0eXih7Z4Rvcy', 'DRIVER', 'Kiss Gábor', '0630123456');
 
 INSERT INTO drivers (id, user_id, license_number, license_expiry_date)
 VALUES
@@ -73,5 +73,6 @@ INSERT INTO notifications
 VALUES
 (2, 'SERVICE_APPROVED', 'Szerviz jóváhagyva', 'A szerviz időpontja rögzítve lett.', 1),
 (1, 'SERVICE_CREATED', 'Új szerviz igény', 'Új szerviz igény érkezett egy járműhöz.', 1);
+
 
 
