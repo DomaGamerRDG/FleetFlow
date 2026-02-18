@@ -1,6 +1,8 @@
 ﻿using backend.Dtos.Assignments;
+using backend.Dtos.FuelLogs;
 using backend.Dtos.Users;
 using backend.Dtos.Vehicles;
+using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +15,11 @@ namespace backend.Controllers
     public class OwnDataController : ControllerBase
     {
         private readonly FlottakezeloDbContext _context;
-        public OwnDataController(FlottakezeloDbContext context)
+        private readonly IWebHostEnvironment _env;
+        public OwnDataController(FlottakezeloDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         [HttpGet("profile/{id}")]
@@ -93,6 +97,37 @@ namespace backend.Controllers
                     if (dto.Password != dto.PasswordAgain)
                         return BadRequest("Passwords do not match");
                     user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                }
+                if (dto.ProfilePicture != null)
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+                    var ext = Path.GetExtension(dto.ProfilePicture.FileName).ToLower();
+                    if (!allowedExtensions.Contains(ext))
+                        return BadRequest("Only .jpg, .jpeg, .png, .pdf files are allowed for receipt");
+                    if (dto.ProfilePicture.Length > 5 * 1024 * 1024)
+                        return BadRequest("Profile picture size cannot exceed 5MB");
+                    var folderPath = Path.Combine(_env.ContentRootPath, "Uploads", "ProfilePictures");
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+                    var extension = Path.GetExtension(dto.ProfilePicture.FileName);
+                    var uniqueFileName = Guid.NewGuid() + extension;
+                    var filePath = Path.Combine(folderPath, uniqueFileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                        await dto.ProfilePicture.CopyToAsync(stream);
+                    var file = new Models.File()
+                    {
+                        UploadedByUserId = user.Id,
+                        OriginalName = dto.ProfilePicture.FileName,
+                        StoredName = Path.GetFileName(uniqueFileName),
+                        MimeType = dto.ProfilePicture.ContentType,
+                        SizeBytes = (ulong)dto.ProfilePicture.Length,
+                        StorageProvider = "LOCAL"
+                    };
+                    _context.Files.Add(file);
+                    int createdRow = await _context.SaveChangesAsync();
+                    if (createdRow == 0)
+                        return StatusCode(500, "Failed to save receipt file");
+                    dto.ProfilePictureId = file.Id;
                 }
                 int modifiedRows = await _context.SaveChangesAsync();
                 if (modifiedRows == 0)
