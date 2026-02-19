@@ -1,4 +1,6 @@
 
+using backend.Services;
+using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -21,7 +23,7 @@ namespace backend
                     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
                 option.UseMySQL(coonectionString);
             });
-
+            builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddSwaggerGen(options =>
@@ -95,7 +97,6 @@ namespace backend
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseStaticFiles();
             app.MapControllers();
 
             app.Run();

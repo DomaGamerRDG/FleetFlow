@@ -123,6 +123,7 @@ namespace backend.Controllers
                 if (trip == null)
                     return NotFound("Trip not found");
                 trip.IsDeleted = true;
+                trip.UpdatedAt = DateTime.UtcNow;
                 int modifiedRow = await _context.SaveChangesAsync();
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to delete trip");
@@ -140,6 +141,7 @@ namespace backend.Controllers
                 if (trip == null)
                     return NotFound("Trip not found");
                 trip.IsDeleted = false;
+                trip.UpdatedAt = DateTime.UtcNow;
                 int modifiedRow = await _context.SaveChangesAsync();
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to restore trip");
@@ -159,6 +161,7 @@ namespace backend.Controllers
                 if (trip.CreatedAt.AddHours(24) < DateTime.UtcNow)
                     return StatusCode(500, "Only trips created within the last 24 hours can be deleted");
                 trip.IsDeleted = true;
+                trip.UpdatedAt = DateTime.UtcNow;
                 int modifiedRow = await _context.SaveChangesAsync();
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to delete trip");

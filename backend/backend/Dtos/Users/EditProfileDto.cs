@@ -12,7 +12,7 @@ namespace backend.Dtos.Users
         public string? Password { get; set; }
         [MaxLength(20)]
         public string? PasswordAgain { get; set; }
-        public IFormFile? ProfilePicture { get; set; }
+        public IFormFile? File { get; set; }
         public ulong? ProfilePictureId { get; set; }
     }
 }

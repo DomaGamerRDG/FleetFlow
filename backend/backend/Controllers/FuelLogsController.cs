@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
+using backend.Services;
 
 namespace backend.Controllers
 {
@@ -15,10 +16,12 @@ namespace backend.Controllers
     {
         private readonly FlottakezeloDbContext _context;
         private readonly IWebHostEnvironment _env;
-        public FuelLogsController(FlottakezeloDbContext context, IWebHostEnvironment env)
+        private readonly FileService _fileService;
+        public FuelLogsController(FlottakezeloDbContext context, IWebHostEnvironment env, FileService fileService)
         {
             _context = context;
             _env = env;
+            _fileService = fileService;
         }
 
         [HttpGet("admin/fuellogs")]
@@ -119,6 +122,7 @@ namespace backend.Controllers
                 if (fuellog == null)
                     return NotFound("Fuellog not found");
                 fuellog.IsDeleted = true;
+                fuellog.UpdatedAt = DateTime.UtcNow;
                 int modifiedRow = await _context.SaveChangesAsync();
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to delete fuellog");
@@ -138,6 +142,7 @@ namespace backend.Controllers
                 if (fuellog.CreatedAt.AddHours(24) < DateTime.UtcNow)
                     return StatusCode(500, "Only fuellogs created within the last 24 hours can be deleted");
                 fuellog.IsDeleted = true;
+                fuellog.UpdatedAt = DateTime.UtcNow;
                 int modifiedRow = await _context.SaveChangesAsync();
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to delete fuellog");
@@ -155,6 +160,7 @@ namespace backend.Controllers
                 if (fuellog == null)
                     return NotFound("Fuellog not found");
                 fuellog.IsDeleted = false;
+                fuellog.UpdatedAt = DateTime.UtcNow;
                 int modifiedRow = await _context.SaveChangesAsync();
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to rstore fuellog");
@@ -176,15 +182,6 @@ namespace backend.Controllers
                     return BadRequest("Date cannot be in the future");
                 if (createFuelLogDto.Date < DateTime.UtcNow.AddDays(-7))
                     return BadRequest("Date cannot be older than 7 days");
-                if (createFuelLogDto.File != null)
-                {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
-                    var extension = Path.GetExtension(createFuelLogDto.File.FileName).ToLower();
-                    if (!allowedExtensions.Contains(extension))
-                        return BadRequest("Only .jpg, .jpeg, .png, .pdf files are allowed for receipt");
-                    if (createFuelLogDto.File.Length > 5 * 1024 * 1024)
-                        return BadRequest("Receipt file size cannot exceed 5MB");
-                }
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     return NotFound("User not found");
@@ -198,28 +195,8 @@ namespace backend.Controllers
                     return BadRequest("OdometerKm must be greater than or equal to the current mileage of the vehicle");
                 if (createFuelLogDto.File != null)
                 {
-                    var folderPath = Path.Combine(_env.ContentRootPath, "Uploads", "Fuellogs");
-                    if (!Directory.Exists(folderPath))
-                        Directory.CreateDirectory(folderPath);
-                    var extension = Path.GetExtension(createFuelLogDto.File.FileName);
-                    var uniqueFileName = Guid.NewGuid() + extension;
-                    var filePath = Path.Combine(folderPath, uniqueFileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                        await createFuelLogDto.File.CopyToAsync(stream);
-                    var file = new Models.File()
-                    {
-                        UploadedByUserId = userId,
-                        OriginalName = createFuelLogDto.File.FileName,
-                        StoredName = Path.GetFileName(uniqueFileName),
-                        MimeType = createFuelLogDto.File.ContentType,
-                        SizeBytes = (ulong)createFuelLogDto.File.Length,
-                        StorageProvider = "LOCAL"
-                    };
-                    _context.Files.Add(file);
-                    int createdRow = await _context.SaveChangesAsync();
-                    if (createdRow == 0)
-                        return StatusCode(500, "Failed to save receipt file");
-                    createFuelLogDto.ReceiptFileId = file.Id;
+                    var fileId = await _fileService.SaveFileAsync(createFuelLogDto.File, "fuel_receipts", userId);
+                    createFuelLogDto.ReceiptFileId = fileId;
                 }
                 var fuellog = new FuelLog
                 {
@@ -240,26 +217,6 @@ namespace backend.Controllers
                 if (createdRow1 == 0)
                     return StatusCode(500, "Failed to create fuellog");
                 return StatusCode(201, "Fuellog created");
-            });
-        }
-
-        [HttpGet("fuellogs/receipt/{fileId}")]
-        [Authorize(Roles = "DRIVER,ADMIN")]
-        public async Task<IActionResult> GetFuellogReceipt(ulong fileId)
-        {
-            return await this.Run(async () =>
-            {
-                var file = await _context.Files.FindAsync(fileId);
-                if (file == null)
-                    return NotFound("File not found");
-                var filePath = Path.Combine(_env.ContentRootPath, "Uploads", "Fuellogs", file.StoredName);
-                if (!System.IO.File.Exists(filePath))
-                    return NotFound("File not found on server");
-                var memory = new MemoryStream();
-                using (var stream = new FileStream(filePath, FileMode.Open))
-                    await stream.CopyToAsync(memory);
-                memory.Position = 0;
-                return File(memory, file.MimeType, file.StoredName);
             });
         }
     }
