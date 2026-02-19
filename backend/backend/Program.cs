@@ -24,6 +24,7 @@ namespace backend
                 option.UseMySQL(coonectionString);
             });
             builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddSwaggerGen(options =>

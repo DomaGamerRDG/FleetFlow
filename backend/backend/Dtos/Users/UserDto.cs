@@ -10,5 +10,6 @@
         public string LicenseNumber { get; set; } = "";
         public DateTime? LicenseExpiryDate { get; set; }
         public string? Notes { get; set; }
+        public ulong? ProfileImgFileId { get; set; }
     }
 }

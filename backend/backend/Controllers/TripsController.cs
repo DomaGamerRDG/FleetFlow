@@ -44,11 +44,11 @@ namespace backend.Controllers
                     tripsQuery = tripsQuery.Where(x =>
                         x.LicensePlate.Contains(q) ||
                         x.UserEmail.Contains(q) ||
-                        x.StartLocation.Contains(q) ||
-                        x.EndLocation.Contains(q) ||
+                        x.StartLocation!.Contains(q) ||
+                        x.EndLocation!.Contains(q) ||
                         (x.Notes != null && x.Notes.Contains(q)) ||
-                        x.DistanceKm.ToString().Contains(q) ||
-                        x.Long.ToString().Contains(q) ||
+                        x.DistanceKm.ToString()!.Contains(q) ||
+                        x.Long.ToString()!.Contains(q) ||
                         x.StartTime.ToString().Contains(q)
                     );
                 }

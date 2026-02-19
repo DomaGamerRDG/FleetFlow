@@ -25,11 +25,13 @@ public partial class Trip
 
     public int? EndOdometerKm { get; set; }
 
-    public string? Purpose { get; set; }
-
     public string? Notes { get; set; }
 
+    public bool IsDeleted { get; set; }
+
     public DateTime CreatedAt { get; set; }
+
+    public DateTime UpdatedAt { get; set; }
 
     public virtual Driver Driver { get; set; } = null!;
 

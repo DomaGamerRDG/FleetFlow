@@ -9,6 +9,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/files")]
+    [Authorize(Roles = "DRIVER,ADMIN")]
     public class FilesController : ControllerBase
     {
         private readonly IFileService _fileService;
@@ -20,7 +21,6 @@ namespace backend.Controllers
 
         [HttpPost]
         [RequestSizeLimit(5 * 1024 * 1024)]
-        [Authorize(Roles = "DRIVER,ADMIN")]
         public async Task<IActionResult> Upload(IFormFile file, [FromQuery] string folder)
         {
             if (file == null || file.Length == 0)
@@ -43,7 +43,6 @@ namespace backend.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "DRIVER,ADMIN")]
         public async Task<IActionResult> Get(ulong id)
         {
             var result = await _fileService.GetFileAsync(id);
@@ -51,7 +50,6 @@ namespace backend.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "DRIVER,ADMIN")]
         public async Task<IActionResult> Delete(ulong id)
         {
             await _fileService.DeleteFileAsync(id);

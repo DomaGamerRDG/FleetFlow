@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
-using backend.Services;
+using backend.Services.Interfaces;
 
 namespace backend.Controllers
 {
@@ -15,12 +15,10 @@ namespace backend.Controllers
     public class FuelLogsController : ControllerBase
     {
         private readonly FlottakezeloDbContext _context;
-        private readonly IWebHostEnvironment _env;
-        private readonly FileService _fileService;
-        public FuelLogsController(FlottakezeloDbContext context, IWebHostEnvironment env, FileService fileService)
+        private readonly IFileService _fileService;
+        public FuelLogsController(FlottakezeloDbContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
             _fileService = fileService;
         }
 

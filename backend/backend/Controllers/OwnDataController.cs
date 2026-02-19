@@ -3,7 +3,7 @@ using backend.Dtos.FuelLogs;
 using backend.Dtos.Users;
 using backend.Dtos.Vehicles;
 using backend.Models;
-using backend.Services;
+using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +16,10 @@ namespace backend.Controllers
     public class OwnDataController : ControllerBase
     {
         private readonly FlottakezeloDbContext _context;
-        private readonly IWebHostEnvironment _env;
-        private readonly FileService _fileService;
-        public OwnDataController(FlottakezeloDbContext context, IWebHostEnvironment env, FileService fileService)
+        private readonly IFileService _fileService;
+        public OwnDataController(FlottakezeloDbContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
             _fileService = fileService;
         }
 
@@ -40,7 +38,8 @@ namespace backend.Controllers
                     {
                         user.FullName,
                         user.Email,
-                        user.Phone
+                        user.Phone,
+                        user.ProfileImgFileId
                     });
                 }
                 else
@@ -51,7 +50,8 @@ namespace backend.Controllers
                         Email = user.Email,
                         Phone = user.Phone,
                         LicenseNumber = user.Driver!.LicenseNumber,
-                        LicenseExpiryDate = user.Driver!.LicenseExpiryDate
+                        LicenseExpiryDate = user.Driver!.LicenseExpiryDate,
+                        ProfileImgFileId = user.ProfileImgFileId
                     });
                 }
             });

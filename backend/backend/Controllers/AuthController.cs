@@ -39,8 +39,8 @@ namespace backend.Controllers
                 Token = token,
                 FullName = user.FullName,
                 Role = user.Role,
-                Id = user.Id
-                //ProfileImgUrl =
+                Id = user.Id,
+                ProfileImgFileId = user.ProfileImgFileId
             });
         }
 

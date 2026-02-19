@@ -57,5 +57,7 @@ public partial class ServiceRequest
 
     public virtual File? InvoiceFile { get; set; }
 
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
     public virtual Vehicle Vehicle { get; set; } = null!;
 }

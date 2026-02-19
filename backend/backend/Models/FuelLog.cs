@@ -27,7 +27,11 @@ public partial class FuelLog
 
     public ulong? ReceiptFileId { get; set; }
 
+    public bool IsDeleted { get; set; }
+
     public DateTime CreatedAt { get; set; }
+
+    public DateTime UpdatedAt { get; set; }
 
     public virtual Driver Driver { get; set; } = null!;
 

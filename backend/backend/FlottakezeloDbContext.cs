@@ -24,6 +24,8 @@ public partial class FlottakezeloDbContext : DbContext
 
     public virtual DbSet<FuelLog> FuelLogs { get; set; }
 
+    public virtual DbSet<Notification> Notifications { get; set; }
+
     public virtual DbSet<ServiceRequest> ServiceRequests { get; set; }
 
     public virtual DbSet<Trip> Trips { get; set; }
@@ -419,10 +421,6 @@ public partial class FlottakezeloDbContext : DbContext
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnType("text")
                 .HasColumnName("notes");
-            entity.Property(e => e.Purpose)
-                .HasMaxLength(120)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnName("purpose");
             entity.Property(e => e.StartLocation)
                 .HasMaxLength(255)
                 .HasDefaultValueSql("'NULL'")

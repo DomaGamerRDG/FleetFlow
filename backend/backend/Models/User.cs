@@ -17,6 +17,8 @@ public partial class User
 
     public string? Phone { get; set; }
 
+    public ulong? ProfileImgFileId { get; set; }
+
     public bool? IsActive { get; set; }
 
     public DateTime CreatedAt { get; set; }
@@ -30,6 +32,8 @@ public partial class User
     public virtual Driver? Driver { get; set; }
 
     public virtual ICollection<File> Files { get; set; } = new List<File>();
+
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     public virtual ICollection<ServiceRequest> ServiceRequestAdminUsers { get; set; } = new List<ServiceRequest>();
 
