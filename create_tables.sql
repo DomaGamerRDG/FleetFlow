@@ -148,7 +148,6 @@ CREATE TABLE IF NOT EXISTS trips (
   distance_km DECIMAL(10,2) NULL,
   start_odometer_km INT NULL,
   end_odometer_km INT NULL,
-  purpose VARCHAR(120) NULL,
   notes TEXT NULL,
   is_deleted TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -303,3 +302,4 @@ CREATE TABLE IF NOT EXISTS notifications (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
