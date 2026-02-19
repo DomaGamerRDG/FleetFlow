@@ -12,7 +12,7 @@ namespace backend.Dtos.FuelLogs
         public decimal Liters { get; set; }
         [Required]
         public decimal TotalCost { get; set; }
-        [Required, MaxLength(3)]
+        [MaxLength(3)]
         public string Currency { get; set; } = "HUF";
         [MaxLength(10)]
         public string? StationName { get; set; }

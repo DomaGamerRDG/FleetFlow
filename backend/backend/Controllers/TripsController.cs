@@ -130,6 +130,23 @@ namespace backend.Controllers
             });
         }
 
+        [HttpPatch("admin/trips/{id}/restore")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> RestoreTrip(ulong id)
+        {
+            return await this.Run(async () =>
+            {
+                var trip = await _context.Trips.FindAsync(id);
+                if (trip == null)
+                    return NotFound("Trip not found");
+                trip.IsDeleted = false;
+                int modifiedRow = await _context.SaveChangesAsync();
+                if (modifiedRow == 0)
+                    return StatusCode(500, "Failed to restore trip");
+                return Ok("Trip restored");
+            });
+        }
+
         [HttpPatch("fuellogs/{id}/delete")]
         [Authorize(Roles = "DRIVER")]
         public async Task<IActionResult> DeleteTripForUser(ulong id)

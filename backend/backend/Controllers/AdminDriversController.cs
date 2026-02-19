@@ -170,6 +170,8 @@ namespace backend.Controllers
                 Driver? driver1 = await _context.Drivers.FirstOrDefaultAsync(x => x.UserId == id);
                 if (driver == null || driver.Role != "DRIVER")
                     return NotFound("Driver not found.");
+                if (driver.IsActive == false)
+                    return BadRequest("Cannot update an inactive driver. Please activate the driver first.");
                 if (updateDriverDto.LicenseExpiryDate.HasValue && updateDriverDto.LicenseExpiryDate <= DateTime.UtcNow)
                     return BadRequest("License expiry date must be in the future.");
                 if (!string.IsNullOrWhiteSpace(updateDriverDto.FullName))

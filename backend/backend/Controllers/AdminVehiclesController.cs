@@ -174,6 +174,8 @@ namespace backend.Controllers
                 Vehicle? vehicle = await _context.Vehicles.FindAsync(id);
                 if (vehicle == null)
                     return NotFound("Vehicle not found.");
+                if (vehicle.Status == "RETIRED")
+                    return BadRequest("Cannot edit a retired vehicle.");
                 if (!string.IsNullOrEmpty(dto.LicensePlate) && vehicle.LicensePlate != dto.LicensePlate && await _context.Vehicles.AnyAsync(x => x.LicensePlate == dto.LicensePlate))
                     return BadRequest("Vehicle with the same license plate already exists.");
                 if (!string.IsNullOrEmpty(dto.LicensePlate))

@@ -31,7 +31,7 @@ namespace backend.Controllers
                 {
                     Id = v.Id,
                     Date = v.Date,
-                    TotalCostCur = v.TotalCost.ToString() + "" + v.Currency,
+                    TotalCostCur = v.TotalCost.ToString() + " Ft",
                     Liters = v.Liters,
                     StationName = v.StationName,
                     ReceiptFileId = v.ReceiptFileId,
@@ -142,6 +142,23 @@ namespace backend.Controllers
                 if (modifiedRow == 0)
                     return StatusCode(500, "Failed to delete fuellog");
                 return Ok("Fuellog deleted");
+            });
+        }
+
+        [HttpPatch("fuellogs/{id}/restore")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> RestoreFuellog(ulong id)
+        {
+            return await this.Run(async () =>
+            {
+                var fuellog = await _context.FuelLogs.FindAsync(id);
+                if (fuellog == null)
+                    return NotFound("Fuellog not found");
+                fuellog.IsDeleted = false;
+                int modifiedRow = await _context.SaveChangesAsync();
+                if (modifiedRow == 0)
+                    return StatusCode(500, "Failed to rstore fuellog");
+                return Ok("Fuellog restored");
             });
         }
 
