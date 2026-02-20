@@ -111,7 +111,6 @@ CREATE TABLE IF NOT EXISTS fuel_logs (
   odometer_km INT NULL,
   liters DECIMAL(10,2) NOT NULL,
   total_cost DECIMAL(10,2) NOT NULL,
-  currency CHAR(3) NOT NULL DEFAULT 'HUF',
   station_name VARCHAR(255) NULL,
   location_text VARCHAR(255) NULL,
   receipt_file_id BIGINT UNSIGNED NULL,
@@ -252,8 +251,6 @@ CREATE TABLE IF NOT EXISTS calendar_events (
   start_at DATETIME NOT NULL,
   end_at DATETIME NULL,
 
-  status ENUM('PLANNED','DONE','CANCELLED') NOT NULL DEFAULT 'PLANNED',
-
   related_service_request_id BIGINT UNSIGNED NULL,
 
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -305,4 +302,5 @@ CREATE TABLE IF NOT EXISTS notifications (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
