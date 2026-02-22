@@ -178,13 +178,11 @@ CREATE TABLE IF NOT EXISTS service_requests (
 
   title VARCHAR(120) NOT NULL,
   description TEXT NULL,
-  priority ENUM('LOW','MEDIUM','HIGH') NOT NULL DEFAULT 'MEDIUM',
 
   status ENUM(
     'REQUESTED',
     'REJECTED',
     'APPROVED',
-    'SCHEDULED',
     'WAITING_DRIVER_COST',
     'CLOSED'
   ) NOT NULL DEFAULT 'REQUESTED',
@@ -199,7 +197,6 @@ CREATE TABLE IF NOT EXISTS service_requests (
   completed_at DATETIME NULL,
 
   driver_report_cost DECIMAL(10,2) NULL,
-  driver_report_currency CHAR(3) NOT NULL DEFAULT 'HUF',
   invoice_file_id BIGINT UNSIGNED NULL,
   driver_close_note TEXT NULL,
 
@@ -302,6 +299,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 
 
