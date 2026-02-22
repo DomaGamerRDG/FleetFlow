@@ -12,7 +12,7 @@ using System.Security.Claims;
 
 namespace backend.Controllers
 {
-    [Route("api")]
+    [Route("api/profile")]
     [ApiController]
     public class OwnDataController : ControllerBase
     {
@@ -24,7 +24,7 @@ namespace backend.Controllers
             _fileService = fileService;
         }
 
-        [HttpGet("profile/mine")]
+        [HttpGet("mine")]
         [Authorize(Roles = "DRIVER,ADMIN")]
         public async Task<IActionResult> GetOwnProfile()
         {
@@ -91,9 +91,9 @@ namespace backend.Controllers
             });
         }
 
-        [HttpPatch("profile/edit")]
+        [HttpPatch("edit")]
         [Authorize(Roles = "DRIVER,ADMIN")]
-        public async Task<IActionResult> EditOwnProfile([FromBody] EditProfileDto dto)
+        public async Task<IActionResult> EditOwnProfile([FromForm] EditProfileDto dto)
         {
             return await this.Run(async () =>
             {
@@ -121,6 +121,7 @@ namespace backend.Controllers
                     var newId = await _fileService.SaveFileAsync(dto.File!, "profiles", userId);
                     user.ProfileImgFileId = newId;
                 }
+                user.UpdatedAt = DateTime.UtcNow;
                 int modifiedRows = await _context.SaveChangesAsync();
                 if (modifiedRows == 0)
                     return StatusCode(500, "Failed to update profile");

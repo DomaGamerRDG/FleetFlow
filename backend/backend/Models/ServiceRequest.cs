@@ -17,8 +17,6 @@ public partial class ServiceRequest
 
     public string? Description { get; set; }
 
-    public string Priority { get; set; } = null!;
-
     public string Status { get; set; } = null!;
 
     public ulong? AdminUserId { get; set; }
@@ -31,11 +29,7 @@ public partial class ServiceRequest
 
     public string? ServiceLocation { get; set; }
 
-    public DateTime? CompletedAt { get; set; }
-
     public decimal? DriverReportCost { get; set; }
-
-    public string DriverReportCurrency { get; set; } = null!;
 
     public ulong? InvoiceFileId { get; set; }
 

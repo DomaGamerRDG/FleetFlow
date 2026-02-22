@@ -5,8 +5,6 @@ namespace backend.Dtos.CalendarEvents
     public class CreateCalendarEventDto
     {
         [Required, MaxLength(20)]
-        public string EventType { get; set; } = null!;
-        [Required, MaxLength(20)]
         public string Title { get; set; } = null!;
         [MaxLength(100)]
         public string? Description { get; set; }

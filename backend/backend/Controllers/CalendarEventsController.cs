@@ -43,7 +43,7 @@ namespace backend.Controllers
 
         [HttpPost]
         [Authorize(Roles = "ADMIN,DRIVER")]
-        public async Task<IActionResult> CreateCalendarEvent(CreateCalendarEventDto dto)
+        public async Task<IActionResult> CreateCalendarEvent([FromBody] CreateCalendarEventDto dto)
         {
             return await this.Run(async () =>
             {
@@ -54,30 +54,17 @@ namespace backend.Controllers
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                     return NotFound("User not found");
-                if (dto.EventType != "PERSONAL_TASK" || dto.EventType != "SERVICE_APPOINTMENT")
-                    return BadRequest("Invalid event type. Allowed values are: PERSONAL_TASK, SERVICE_APPOINTMENT");
                 if (dto.EndAt != null && dto.EndAt <= dto.StartAt)
                     return BadRequest("EndAt must be greater than StartAt");
-                if (dto.EventType == "SERVICE_APPOINTMENT" && user.Role != "ADMIN")
-                    return Forbid("Not allowed to create service appointment");
-                ulong ownerId = 0;
-                if (dto.EventType == "PERSONAL_TASK")
-                    ownerId = userId;
-                // service id visszaadasa
-                //else
-                //{
-
-                //}
                 var calendarEvent = new CalendarEvent
                 {
-                    OwnerUserId = ownerId,
+                    OwnerUserId = userId,
                     CreatedByUserId = userId,
-                    EventType = dto.EventType,
+                    EventType = "PERSONAL_TASK",
                     Title = dto.Title,
                     Description = dto.Description,
                     StartAt = dto.StartAt,
-                    EndAt = dto.EndAt,
-                    //RelatedServiceRequestId =
+                    EndAt = dto.EndAt
                 };
                 _context.CalendarEvents.Add(calendarEvent);
                 int createdRows = await _context.SaveChangesAsync();

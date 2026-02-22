@@ -279,10 +279,6 @@ public partial class FlottakezeloDbContext : DbContext
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnType("datetime")
                 .HasColumnName("closed_at");
-            entity.Property(e => e.CompletedAt)
-                .HasDefaultValueSql("'NULL'")
-                .HasColumnType("datetime")
-                .HasColumnName("completed_at");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("'current_timestamp()'")
                 .HasColumnType("datetime")
@@ -305,19 +301,10 @@ public partial class FlottakezeloDbContext : DbContext
                 .HasPrecision(10)
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnName("driver_report_cost");
-            entity.Property(e => e.DriverReportCurrency)
-                .HasMaxLength(3)
-                .HasDefaultValueSql("'''HUF'''")
-                .IsFixedLength()
-                .HasColumnName("driver_report_currency");
             entity.Property(e => e.InvoiceFileId)
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnType("bigint(20) unsigned")
                 .HasColumnName("invoice_file_id");
-            entity.Property(e => e.Priority)
-                .HasDefaultValueSql("'''MEDIUM'''")
-                .HasColumnType("enum('LOW','MEDIUM','HIGH')")
-                .HasColumnName("priority");
             entity.Property(e => e.ScheduledEnd)
                 .HasDefaultValueSql("'NULL'")
                 .HasColumnType("datetime")
@@ -332,7 +319,7 @@ public partial class FlottakezeloDbContext : DbContext
                 .HasColumnName("service_location");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'''REQUESTED'''")
-                .HasColumnType("enum('REQUESTED','REJECTED','APPROVED','SCHEDULED','WAITING_DRIVER_COST','CLOSED')")
+                .HasColumnType("enum('REQUESTED','REJECTED','APPROVED','DRIVER_COST','CLOSED')")
                 .HasColumnName("status");
             entity.Property(e => e.Title)
                 .HasMaxLength(120)
@@ -457,6 +444,9 @@ public partial class FlottakezeloDbContext : DbContext
             entity.Property(e => e.FullName)
                 .HasMaxLength(255)
                 .HasColumnName("full_name");
+            entity.Property(e => e.ProfileImgFileId)
+                .HasColumnType("bigint(20) unsigned")
+                .HasColumnName("profile_img_file_id");
             entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValueSql("'1'")

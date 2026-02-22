@@ -34,7 +34,7 @@ namespace backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateNotificationDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateNotificationDto dto)
         {
             return await this.Run(async () =>
             {

@@ -14,7 +14,7 @@ namespace backend.Controllers
             catch (Exception ex)
             {
 #if DEBUG
-                return controller.BadRequest(new {message = ex});
+                return controller.BadRequest(new {message = ex.Message});
 #else
                 return controller.BadRequest(new {message = "Váratlan hiba!"});
 #endif
